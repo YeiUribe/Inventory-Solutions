@@ -1,0 +1,80 @@
+{
+  "info": {
+    "name": "Inventory Solutions API",
+    "_postman_id": "inventory-solutions-collection",
+    "description": "Collection for Inventory Solutions API CRUD tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "body": {"mode":"raw","raw":"{\n  \"username\": \"{{USERNAME}}\",\n  \"password\": \"{{PASSWORD}}\"\n}"},
+        "url": {"raw": "{{API_BASE}}/api/auth/login", "host": ["{{API_BASE}}"], "path": ["api","auth","login"]}
+      }
+    },
+    {
+      "name": "Inventory - List",
+      "request": {"method":"GET","url":{"raw":"{{API_BASE}}/api/inventory","host":["{{API_BASE}}"],"path":["api","inventory"]}}
+    },
+    {
+      "name": "Inventory - Create",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "body": {"mode":"raw","raw":"{\n  \"activo_fijo\": \"TEST-12345\",\n  \"device\": \"Test Device\",\n  \"category\": \"Portatil\",\n  \"status\": \"Disponible\"\n}"},
+        "url": {"raw":"{{API_BASE}}/api/inventory","host":["{{API_BASE}}"],"path":["api","inventory"]}
+      }
+    },
+    {
+      "name": "Inventory - Update",
+      "request": {
+        "method": "PUT",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "body": {"mode":"raw","raw":"{\n  \"status\": \"Mantenimiento\"\n}"},
+        "url": {"raw":"{{API_BASE}}/api/inventory/TEST-12345","host":["{{API_BASE}}"],"path":["api","inventory","TEST-12345"]}
+      }
+    },
+    {
+      "name": "Inventory - Delete",
+      "request": {"method":"DELETE","url":{"raw":"{{API_BASE}}/api/inventory/TEST-12345","host":["{{API_BASE}}"],"path":["api","inventory","TEST-12345"]}}
+    },
+    {
+      "name": "Asignaciones - Create",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "body": {"mode":"raw","raw":"{\n  \"activo_fijo\": \"ML-156594\",\n  \"cedula\": \"1007413774\"\n}"},
+        "url": {"raw":"{{API_BASE}}/api/asignaciones","host":["{{API_BASE}}"],"path":["api","asignaciones"]}
+      }
+    },
+    {
+      "name": "Asignaciones - Devolver",
+      "request": {"method":"PUT","url":{"raw":"{{API_BASE}}/api/asignaciones/devolver/ML-156594","host":["{{API_BASE}}"],"path":["api","asignaciones","devolver","ML-156594"]}}
+    },
+    {
+      "name": "History - List",
+      "request": {"method":"GET","url":{"raw":"{{API_BASE}}/api/history","host":["{{API_BASE}}"],"path":["api","history"]}}
+    },
+    {
+      "name": "Usuarios - List",
+      "request": {"method":"GET","url":{"raw":"{{API_BASE}}/api/usuarios","host":["{{API_BASE}}"],"path":["api","usuarios"]}}
+    },
+    {
+      "name": "Usuarios - Create",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "body": {"mode":"raw","raw":"{\n  \"cedula\": \"9999999999\",\n  \"usuario_login\": \"testuser\",\n  \"password_hash\": \"pass123\",\n  \"id_rol\": 3\n}"},
+        "url": {"raw":"{{API_BASE}}/api/usuarios","host":["{{API_BASE}}"],"path":["api","usuarios"]}
+      }
+    }
+  ],
+  "variable": [
+    {"key":"API_BASE","value":"http://localhost:3001"},
+    {"key":"USERNAME","value":"joquendo"},
+    {"key":"PASSWORD","value":"1234"}
+  ]
+}

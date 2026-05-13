@@ -1,0 +1,16 @@
+{
+  "name": "pagina-workspace-runner",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --prefix Pagina run dev",
+    "server": "npm --prefix Pagina run server",
+    "dev:all": "npm --prefix Pagina run dev:all",
+    "build": "npm --prefix Pagina run build",
+    "preview": "npm --prefix Pagina run preview",
+    "lint": "npm --prefix Pagina run lint"
+  },
+  "dependencies": {
+    "axios": "^1.16.0"
+  }
+}
