@@ -7,6 +7,7 @@ import AddItemModal from '../components/dashboard/AddItemModal';
 import InventoryStats from '../components/dashboard/InventoryStats';
 import AddItemPage from './AddItemPage';
 import HistoryView from './HistoryView';
+import HistorialAuditoria from '../components/dashboard/HistorialAuditoria';
 import ReportsView from './ReportsView';
 import Usuarios from './Usuarios';
 import { useInventory } from '../hooks/useInventory';
@@ -146,7 +147,7 @@ const InventoryDashboard = () => {
         <Route path="/" element={<Navigate to="inventory" replace />} />
         <Route path="inventory" element={<DashboardMainView />} />
         <Route path="add" element={<AddItemPage />} />
-        <Route path="history" element={<HistoryView />} />
+        <Route path="history" element={<HistorialAuditoria />} />
         <Route path="reports" element={<ReportsView />} />
         <Route path="usuarios" element={<Usuarios />} />
       </Routes>

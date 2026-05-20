@@ -10,8 +10,11 @@ const Sidebar = () => {
   const navItems = [
     { path: '/dashboard/inventory', icon: <LayoutDashboard size={20} />, label: 'Tablero' },
     { path: '/dashboard/inventory', icon: <Package size={20} />, label: 'Inventario' },
-    { path: '/dashboard/add', icon: <PlusCircle size={20} />, label: 'Agregar item' },
-    { path: '/dashboard/usuarios', icon: <Users size={20} />, label: 'Usuarios' },
+    // 'Agregar item' and 'Usuarios' are admin-only
+    ...(user && user.role === 'Administrador' ? [
+      { path: '/dashboard/add', icon: <PlusCircle size={20} />, label: 'Agregar item' },
+      { path: '/dashboard/usuarios', icon: <Users size={20} />, label: 'Usuarios' },
+    ] : []),
     { path: '/dashboard/history', icon: <History size={20} />, label: 'Historial' },
     { path: '/dashboard/reports', icon: <FileText size={20} />, label: 'Reportes' },
   ];

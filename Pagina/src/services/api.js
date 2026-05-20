@@ -1,4 +1,4 @@
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL) : '').replace(/\/$/, '');
 
 const getErrorMessage = async (res) => {
   try {
@@ -11,9 +11,23 @@ const getErrorMessage = async (res) => {
 
 const request = async (path, options = {}) => {
   const { headers, ...restOptions } = options;
+  // Attach current session headers automatically if available
+  let session;
+  try {
+    session = localStorage.getItem('inventory_session');
+    session = session ? JSON.parse(session) : null;
+  } catch {
+    session = null;
+  }
+
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+    ...(session ? { 'x-user-name': session.name || session.username || 'Sistema', 'x-user-role': session.role || '' } : {}),
+  };
+
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
-      'Content-Type': 'application/json',
+      ...defaultHeaders,
       ...(headers || {}),
     },
     ...restOptions,
@@ -73,7 +87,11 @@ export const api = {
       created_at: r.created_at || r.date,
       action: r.action,
       user_name: r.user_name || r.user,
-      details: r.details,
+      resumen: r.resumen || '',
+      tabla: r.tabla || '',
+      id_registro: r.id_registro || '',
+      detailsText: typeof r.details === 'string' ? r.details : (r.details ? JSON.stringify(r.details) : ''),
+      detailsObj: (typeof r.details === 'string' ? (() => { try { return JSON.parse(r.details); } catch { return null; } })() : (r.details || null)),
     }));
   },
 

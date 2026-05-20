@@ -18,22 +18,37 @@ const HistoryView = () => {
       {loading ? (
         <Card style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-gray)' }}>Cargando historial...</Card>
       ) : (
-        <Lista 
+        <Lista
           title="Registro de auditoría"
-          items={[...history].reverse()} // Mostrar los más recientes primero
+          items={[...history].reverse()}
           keyExtractor={(item) => item.id}
           emptyMessage="No hay modificaciones registradas."
-          renderItem={(h) => (
-            <div className="history-item" style={{ border: 'none', padding: 0, background: 'transparent' }}>
-              <span className="history-item-date">
-                {new Date(h.created_at || (new Date()).toISOString()).toLocaleString('es-CO')}
-              </span>
-              <div>
-                <span className="history-item-action">{h.action}</span>: {h.details}
+          renderItem={(h) => {
+            const fecha = new Date(h.created_at || new Date().toISOString()).toLocaleString('es-CO');
+            const mainText = (h.resumen && h.resumen.length > 0) ? h.resumen : `${h.action}: ${h.detailsText}`;
+            return (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{ minWidth: '12rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>{fecha}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ marginBottom: '0.25rem' }}>
+                    <strong style={{ color: 'var(--primary)', marginRight: '0.5rem' }}>{h.action}</strong>
+                    <span>{mainText}</span>
+                  </div>
+
+                  {h.detailsObj && typeof h.detailsObj === 'object' && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      {Object.entries(h.detailsObj).map(([k, v]) => (
+                        <div key={k} style={{ background: 'var(--bg-muted)', padding: '0.35rem 0.5rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+                          <strong style={{ color: 'var(--text-dark)' }}>{k}:</strong> <span style={{ color: 'var(--text-gray)' }}>{String(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div style={{ minWidth: '9rem', textAlign: 'right', color: 'var(--text-gray)' }}>{h.user_name}</div>
               </div>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-gray)' }}>{h.user_name}</span>
-            </div>
-          )}
+            );
+          }}
         />
       )}
     </div>

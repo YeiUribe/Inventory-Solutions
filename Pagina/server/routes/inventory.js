@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { query } from '../db.js';
 import { TABLES } from '../config.js';
 import { validarInventario } from '../middlewares/validarInventario.js';
+import requireAdmin from '../middlewares/requireAdmin.js';
+import { registrarMovimiento } from '../services/audit.js';
 
 const router = Router();
 const activos = TABLES.activos;
@@ -111,7 +113,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/inventory - RF-01
-router.post('/', validarInventario, async (req, res) => {
+router.post('/', validarInventario, requireAdmin, async (req, res) => {
   try {
     const body = req.body;
     const user = req.headers['x-user-name'] || 'Sistema';
@@ -139,6 +141,25 @@ router.post('/', validarInventario, async (req, res) => {
       activo_fijo, serial, nombre_equipo, marca, detalle_equipo, tipo_equipo, estado, ocs, techpulse, sophos, id_contrato
     });
 
+    // 📝 Registrar creación en auditoría
+    await registrarMovimiento(
+      'CREATE',
+      activos,
+      activo_fijo,
+      user,
+      {
+        activo_fijo,
+        nombre_equipo,
+        tipo_equipo,
+        marca,
+        serial,
+        estado,
+        detalles: detalle_equipo,
+      },
+      null,
+      newItem
+    );
+
     res.status(201).json(newItem);
   } catch (err) {
     console.error('Add inventory error:', err);
@@ -147,10 +168,11 @@ router.post('/', validarInventario, async (req, res) => {
 });
 
 // PUT /api/inventory/:id - RF-03
-router.put('/:id', validarInventario, async (req, res) => {
+router.put('/:id', validarInventario, requireAdmin, async (req, res) => {
   try {
     const id = req.params.id;
     const body = req.body;
+    const user = req.headers['x-user-name'] || 'Sistema';
     const hasFechaDevolucion = await hasFechaDevolucionColumn();
 
     const rows = await query(`SELECT * FROM \`${activos}\` WHERE activo_fijo = ?`, [id]);
@@ -158,24 +180,44 @@ router.put('/:id', validarInventario, async (req, res) => {
       return res.status(404).json({ error: 'Equipo no encontrado' });
     }
 
-    const oldEstado = rows[0].estado;
-    const nombre_equipo = body.device ?? body.nombre_equipo ?? rows[0].nombre_equipo;
-    const marca = body.marca ?? body.marca_modelo ?? rows[0].marca ?? '';
-    const detalle_equipo = body.detalle_equipo ?? body.detalle ?? rows[0].detalle_equipo ?? '';
-    const tipo_equipo = body.category ?? body.tipo_equipo ?? rows[0].tipo_equipo;
-    const estado = body.status ?? body.estado ?? rows[0].estado ?? 'Activo';
-    const serial = body.serial ?? rows[0].serial;
-    const ocs = body.ocs ?? rows[0].ocs ?? null;
-    const techpulse = body.techpulse ?? rows[0].techpulse ?? null;
-    const sophos = body.sophos ?? rows[0].sophos ?? null;
-    const id_contrato = body.id_contrato ?? rows[0].id_contrato ?? null;
+    const oldData = rows[0];
+    const oldEstado = oldData.estado;
+    const nombre_equipo = body.device ?? body.nombre_equipo ?? oldData.nombre_equipo;
+    const marca = body.marca ?? body.marca_modelo ?? oldData.marca ?? '';
+    const detalle_equipo = body.detalle_equipo ?? body.detalle ?? oldData.detalle_equipo ?? '';
+    const tipo_equipo = body.category ?? body.tipo_equipo ?? oldData.tipo_equipo;
+    const estado = body.status ?? body.estado ?? oldData.estado ?? 'Activo';
+    const serial = body.serial ?? oldData.serial;
+    const ocs = body.ocs ?? oldData.ocs ?? null;
+    const techpulse = body.techpulse ?? oldData.techpulse ?? null;
+    const sophos = body.sophos ?? oldData.sophos ?? null;
+    const id_contrato = body.id_contrato ?? oldData.id_contrato ?? null;
 
     // Si cambias de estado (que no sea "Disponible") a "Disponible", devuelve el equipo
     if (hasFechaDevolucion && oldEstado !== 'Disponible' && estado === 'Disponible') {
-      await query(
-        `UPDATE \`${asignaciones}\` SET fecha_devolucion = ? WHERE activo_fijo = ? AND fecha_devolucion IS NULL`,
-        [new Date().toISOString().slice(0, 10), id]
+      const asignActiva = await query(
+        `SELECT * FROM \`${asignaciones}\` WHERE activo_fijo = ? AND fecha_devolucion IS NULL ORDER BY fecha_entrega DESC LIMIT 1`,
+        [id]
       );
+      if (asignActiva && asignActiva.length > 0) {
+        await query(
+          `UPDATE \`${asignaciones}\` SET fecha_devolucion = ? WHERE id_asignacion = ?`,
+          [new Date().toISOString().slice(0, 10), asignActiva[0].id_asignacion]
+        );
+        
+        // 📝 Registrar devolución
+        await registrarMovimiento(
+          'RETURN',
+          asignaciones,
+          asignActiva[0].id_asignacion,
+          user,
+          {
+            activo_fijo: id,
+            cedula: asignActiva[0].cedula,
+            fecha_devolucion: new Date().toISOString().slice(0, 10),
+          }
+        );
+      }
     }
 
     const activeFilter = hasFechaDevolucion ? 'AND ax.fecha_devolucion IS NULL' : '';
@@ -205,7 +247,42 @@ router.put('/:id', validarInventario, async (req, res) => {
       WHERE a.activo_fijo = ?
     `, [id]);
 
-    res.json(mapEquipoToFrontend(Array.isArray(updated) ? updated[0] : updated ?? { activo_fijo: id, nombre_equipo, marca, detalle_equipo, tipo_equipo, estado, serial, ocs, techpulse, sophos, id_contrato }));
+    const updatedItem = mapEquipoToFrontend(Array.isArray(updated) ? updated[0] : updated ?? {
+      activo_fijo: id, nombre_equipo, marca, detalle_equipo, tipo_equipo, estado, serial, ocs, techpulse, sophos, id_contrato
+    });
+
+    // 📝 Registrar actualización en auditoría (solo si hay cambios)
+    const estadoAnterior = {
+      nombre_equipo: oldData.nombre_equipo,
+      tipo_equipo: oldData.tipo_equipo,
+      marca: oldData.marca,
+      serial: oldData.serial,
+      estado: oldEstado,
+      detalles: oldData.detalle_equipo,
+    };
+    
+    const estadoNuevo = {
+      nombre_equipo,
+      tipo_equipo,
+      marca,
+      serial,
+      estado,
+      detalles: detalle_equipo,
+    };
+
+    if (JSON.stringify(estadoAnterior) !== JSON.stringify(estadoNuevo)) {
+      await registrarMovimiento(
+        'UPDATE',
+        activos,
+        id,
+        user,
+        { activo_fijo: id },
+        estadoAnterior,
+        estadoNuevo
+      );
+    }
+
+    res.json(updatedItem);
   } catch (err) {
     console.error('Update inventory error:', err);
     res.status(500).json({ error: err.message || 'Error al actualizar' });
@@ -213,16 +290,19 @@ router.put('/:id', validarInventario, async (req, res) => {
 });
 
 // DELETE /api/inventory/:id - RF-04
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const id = req.params.id;
+    const user = req.headers['x-user-name'] || 'Sistema';
 
     const rows = await query(`SELECT * FROM \`${activos}\` WHERE activo_fijo = ?`, [id]);
     if (!rows || rows.length === 0) {
       return res.status(404).json({ error: 'Equipo no encontrado' });
     }
 
-    const asigs = await query(`SELECT * FROM \`${asignaciones}\` WHERE activo_fijo = ?`, [id]);
+    const equipoData = rows[0];
+
+    const asigs = await query(`SELECT * FROM \`${asignaciones}\` WHERE activo_fijo = ? AND fecha_devolucion IS NULL`, [id]);
     if (asigs && asigs.length > 0) {
       return res.status(400).json({
         error: 'No es posible eliminar el equipo porque tiene asignaciones activas.',
@@ -230,6 +310,24 @@ router.delete('/:id', async (req, res) => {
     }
 
     await query(`DELETE FROM \`${activos}\` WHERE activo_fijo = ?`, [id]);
+
+    // 📝 Registrar eliminación en auditoría
+    await registrarMovimiento(
+      'DELETE',
+      activos,
+      id,
+      user,
+      {
+        activo_fijo: id,
+        nombre_equipo: equipoData.nombre_equipo,
+        tipo_equipo: equipoData.tipo_equipo,
+        marca: equipoData.marca,
+        serial: equipoData.serial,
+      },
+      mapEquipoToFrontend(equipoData),
+      null
+    );
+
     res.json({ success: true });
   } catch (err) {
     console.error('Delete inventory error:', err);

@@ -1,0 +1,108 @@
+{
+  "info": {
+    "name": "Inventory Solutions - Autotest Requests",
+    "_postman_id": "autotest-collection-001",
+    "description": "Colección de requests para pruebas: login, crear activo, crear asignación, consultar historial.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "adminRole",
+      "value": "Administrador"
+    },
+    {
+      "key": "userName",
+      "value": "TuNombre"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"yuribe\",\n  \"password\": \"123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Inventory - Create Active",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-user-role", "value": "{{adminRole}}" },
+          { "key": "x-user-name", "value": "{{userName}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"activo_fijo\": \"AUTOTEST-999\",\n  \"device\": \"AutoTest\",\n  \"nombre_equipo\": \"AutoTest\",\n  \"category\": \"Portatil\",\n  \"serial\": \"SN-AUTOTEST-999\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/inventory",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","inventory"]
+        }
+      }
+    },
+    {
+      "name": "Asignaciones - Create Assignment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-user-role", "value": "{{adminRole}}" },
+          { "key": "x-user-name", "value": "{{userName}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"activo_fijo\": \"AUTOTEST-999\",\n  \"cedula\": \"10102020\",\n  \"id_ubicacion\": null,\n  \"fecha_entrega\": \"2026-05-20\",\n  \"perfil\": \"Test\",\n  \"concepto\": \"Prueba automatizada\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/asignaciones",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","asignaciones"]
+        }
+      }
+    },
+    {
+      "name": "History - Get Asignaciones",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/history?tabla=asignaciones",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","history"],
+          "query": [
+            { "key": "tabla", "value": "asignaciones" }
+          ]
+        }
+      }
+    }
+  ]
+}

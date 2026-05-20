@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import validarUsuario from '../middlewares/validarUsuario.js';
+import requireAdmin from '../middlewares/requireAdmin.js';
 import {
   obtenerUsuarios,
   crearUsuario,
@@ -9,9 +10,9 @@ import {
 
 const router = Router();
 
-router.get('/', obtenerUsuarios);
-router.post('/', validarUsuario, crearUsuario);
-router.put('/:id', validarUsuario, actualizarUsuario);
-router.delete('/:id', eliminarUsuario);
+router.get('/', requireAdmin, obtenerUsuarios);
+router.post('/', validarUsuario, requireAdmin, crearUsuario);
+router.put('/:id', validarUsuario, requireAdmin, actualizarUsuario);
+router.delete('/:id', requireAdmin, eliminarUsuario);
 
 export default router;

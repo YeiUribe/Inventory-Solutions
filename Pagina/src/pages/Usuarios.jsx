@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 
 const ROLES = [
   { id: 1, nombre_rol: 'Administrador' },
@@ -18,6 +19,16 @@ const emptyForm = {
 };
 
 function Usuarios() {
+  const { hasRole } = useAuth();
+  // Prevent non-admins from using this page
+  if (!hasRole(['Administrador'])) {
+    return (
+      <div style={{ padding: '20px', maxWidth: '1100px', margin: '0 auto' }}>
+        <h1>Acceso restringido</h1>
+        <p style={{ color: 'var(--text-gray)' }}>No tienes permisos para ver o gestionar usuarios.</p>
+      </div>
+    );
+  }
   const [usuarios, setUsuarios] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editando, setEditando] = useState(null);
@@ -28,6 +39,11 @@ function Usuarios() {
 
   const cargarUsuarios = async () => {
     try {
+      // Ensure axios sends role header if session present
+      try {
+        const session = JSON.parse(localStorage.getItem('inventory_session') || 'null');
+        if (session && session.role) axios.defaults.headers.common['x-user-role'] = session.role;
+      } catch {}
       const res = await axios.get(URL);
       setUsuarios(Array.isArray(res.data) ? res.data : []);
     } catch (requestError) {

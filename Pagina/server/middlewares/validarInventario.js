@@ -7,11 +7,8 @@ export const validarInventario = (req, res, next) => {
   const finalTipoEquipo = category || tipo_equipo;
   const finalEstado = status || estado;
 
-  // Si es creación, el activo_fijo no debe estar vacío
-  // (Aunque la BD tiene un fallback para autogenerarlo, pediste que no vengan vacíos)
-  if (isPost && (!finalActivoFijo || String(finalActivoFijo).trim() === '')) {
-    return res.status(400).json({ error: 'El campo código de activo (activo_fijo) es requerido y no puede estar vacío.' });
-  }
+  // Nota: el servidor puede autogenerar `activo_fijo` si no se envía.
+  // No forzamos su presencia aquí para permitir clients que no lo proporcionen.
 
   if (finalNombreEquipo !== undefined && String(finalNombreEquipo).trim() === '') {
     return res.status(400).json({ error: 'El nombre del equipo no puede estar vacío.' });
