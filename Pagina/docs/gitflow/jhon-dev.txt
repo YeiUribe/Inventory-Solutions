@@ -3,3 +3,4 @@ Developer: Jhon
 Base branch: dev
 Incluye proyecto Frontend y Backend PPI en repositorio.
 Fecha: 2026-05-25
+Actualizacion en rama feature/jhon para merge a dev.
