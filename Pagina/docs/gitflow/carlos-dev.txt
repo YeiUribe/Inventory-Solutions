@@ -3,3 +3,4 @@ Developer: Carlos
 Base branch: dev
 Incluye proyecto Frontend y Backend PPI en repositorio.
 Fecha: 2026-05-25
+Actualizacion en rama feature/carlos para merge a dev.
