@@ -1,0 +1,58 @@
+Resumen Plano del Código - Inventory Solutions
+
+Visión general:
+Proyecto full-stack con frontend en React (Vite) dentro de `Pagina/src` y backend Node/Express en `Pagina/server`.
+
+Backend (APIs):
+- Entrada: Pagina/server/index.js (inicia Express y monta rutas).
+- Config / BD: Pagina/server/config.js, Pagina/server/db.js.
+- Rutas (endpoints) en Pagina/server/routes/:
+  - inventory.js -> CRUD inventario, búsquedas, filtros.
+  - auth.js -> login, logout, tokens.
+  - usuarios.js -> gestión de usuarios.
+  - asignaciones.js -> asignar/devolver items.
+  - history.js -> historial y auditoría.
+  - colaboradores.js -> endpoints relacionados con colaboradores.
+- Controladores y servicios: Pagina/server/controllers/* y Pagina/server/services/* (ej.: usuariosController.js, services/audit.js).
+- Middlewares: Pagina/server/middlewares/* (validarAuth, requireAdmin, validarInventario, validarUsuario, validarAsignacion).
+
+Frontend (cliente):
+- Entry: Pagina/src/main.jsx, Pagina/src/App.jsx.
+- Cliente API central: Pagina/src/services/api.js (funciones HTTP, baseURL, manejo de token).
+- Hooks: Pagina/src/hooks/useAuth.js (autenticación), Pagina/src/hooks/useInventory.js (estado y llamadas CRUD inventario).
+- Páginas: Pagina/src/pages/ (Login, Landing, InventoryDashboard, AddItemPage, HistoryView, ReportsView, Usuarios).
+- Componentes reutilizables: Pagina/src/components/common/ (DataTable, Modal, Input, Button, Card, DonutChart, Lista).
+- Componentes del dashboard: Pagina/src/components/dashboard/ (InventoryList, InventoryStats, ItemDetails, AddItemModal, EditItemModal, AssignmentModal, HistorialAuditoria).
+- Layout: Pagina/src/components/layout/ (DashboardLayout, Navbar, Sidebar, Footer, PublicLayout).
+- Almacenamiento local: Pagina/src/services/localStore.js (tokens, preferences).
+- Reportes: Pagina/src/services/reports.js.
+
+Scripts y migraciones:
+- Pagina/scripts/: migrate.mjs, run-migration.mjs, exec-migration.mjs, apply_sql.js, create-audit-table.js, api_test.mjs.
+- Uso para preparar/actualizar esquema BD y pruebas automatizadas vía Postman/scripts.
+
+Postman y pruebas:
+- Colecciones: Pagina/postman_collection_inventory.json, Pagina/postman_collection_inventory_autotest.json.
+- Entorno: Pagina/postman_environment_inventory.json.
+- Script de pruebas: Pagina/scripts/api_test.mjs.
+
+Archivos críticos (revisión prioritaria):
+- Pagina/server/index.js
+- Pagina/server/db.js
+- Pagina/server/routes/inventory.js
+- Pagina/server/middlewares/validarAuth.js
+- Pagina/src/services/api.js
+- Pagina/src/hooks/useInventory.js
+
+Cómo ejecutar (resumen rápido):
+- Frontend (dentro de Pagina): instalar deps y dev:
+  npm install
+  npm run dev
+- Backend: revisar scripts en Pagina/package.json o ejecutar node/pm2 según setup (index.js arranca servidor).
+
+Recomendaciones inmediatas:
+- Revisar permisos y validaciones en middlewares antes de exponer endpoints.
+- Sincronizar rutas en `api.js` con las rutas definidas en `Pagina/server/routes/`.
+- Ejecutar colecciones Postman para validar flujo auth -> CRUD -> auditoría.
+
+Fin del resumen plano.
